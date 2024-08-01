@@ -31,7 +31,7 @@ load(
     _load_arbitrary_tool = "load_arbitrary_tool",
 )
 
-# Reexport `load_arbitrary_tool` as it's currently in use in https://github.com/google/cargo-raze
+# Re-export `load_arbitrary_tool` as it's historically been used in external repositories.
 load_arbitrary_tool = _load_arbitrary_tool
 
 # Note: Code in `.github/workflows/crate_universe.yaml` looks for this line, if you remove it or change its format, you will also need to update that code.
@@ -112,7 +112,7 @@ def rust_register_toolchains(
         global_allocator_library = None,
         iso_date = None,
         register_toolchains = True,
-        rustfmt_version = DEFAULT_NIGHTLY_VERSION,
+        rustfmt_version = None,
         rust_analyzer_version = None,
         sha256s = None,
         extra_target_triples = DEFAULT_EXTRA_TARGET_TRIPLES,
@@ -146,7 +146,7 @@ def rust_register_toolchains(
         global_allocator_library (str, optional): Target that provides allocator functions when global allocator is used with cc_common.link.
         iso_date (str, optional):  **Deprecated**: Use `versions` instead.
         register_toolchains (bool): If true, repositories will be generated to produce and register `rust_toolchain` targets.
-        rustfmt_version (str, optional): The version of rustfmt.
+        rustfmt_version (str, optional): The version of rustfmt. If none is supplied and only a single version in `versions` is given, then this defaults to that version, otherwise will default to the default nightly version.
         rust_analyzer_version (str, optional): The version of Rustc to pair with rust-analyzer.
         sha256s (str, optional): A dict associating tool subdirectories to sha256 hashes.
         extra_target_triples (list, optional): Additional rust-style targets that rust toolchains should support.
@@ -175,6 +175,12 @@ def rust_register_toolchains(
             versions = [version]
         else:
             versions = _RUST_TOOLCHAIN_VERSIONS
+
+    if not rustfmt_version:
+        if len(versions) == 1:
+            rustfmt_version = versions[0]
+        else:
+            rustfmt_version = DEFAULT_NIGHTLY_VERSION
 
     if dev_components:
         has_nightly = False
@@ -1081,6 +1087,16 @@ def rust_repository_set(
         elif type(extra_target_triples) == "dict":
             target_compatible_with = extra_target_triples.get(toolchain.target_triple)
 
+        # Infer toolchain-specific rustc flags depending on the type (list, dict, optional) of extra_rustc_flags
+        if extra_rustc_flags == None:
+            toolchain_extra_rustc_flags = []
+        elif type(extra_rustc_flags) == "list":
+            toolchain_extra_rustc_flags = extra_rustc_flags
+        elif type(extra_rustc_flags) == "dict":
+            toolchain_extra_rustc_flags = extra_rustc_flags.get(toolchain.target_triple)
+        else:
+            fail("extra_rustc_flags should be a list or a dict")
+
         all_toolchain_names.append(rust_toolchain_repository(
             name = toolchain.name,
             allocator_library = allocator_library,
@@ -1093,7 +1109,7 @@ def rust_repository_set(
             edition = edition,
             exec_triple = exec_triple,
             extra_exec_rustc_flags = extra_exec_rustc_flags,
-            extra_rustc_flags = extra_rustc_flags.get(toolchain.target_triple) if extra_rustc_flags != None else None,
+            extra_rustc_flags = toolchain_extra_rustc_flags,
             opt_level = opt_level.get(toolchain.target_triple) if opt_level != None else None,
             target_settings = target_settings,
             iso_date = toolchain.channel.iso_date,

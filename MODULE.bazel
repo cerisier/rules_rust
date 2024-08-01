@@ -2,7 +2,7 @@
 
 module(
     name = "rules_rust",
-    version = "0.43.0",
+    version = "0.49.0",
 )
 
 bazel_dep(
@@ -27,7 +27,7 @@ bazel_dep(
 )
 bazel_dep(
     name = "rules_proto",
-    version = "5.3.0-21.7",
+    version = "6.0.2",
 )
 bazel_dep(
     name = "apple_support",
@@ -45,6 +45,11 @@ bazel_dep(
 )
 
 bazel_dep(
+    name = "bazel_ci_rules",
+    version = "1.0.0",
+    dev_dependency = True,
+)
+bazel_dep(
     name = "rules_python",
     version = "0.31.0",
     dev_dependency = True,
@@ -58,13 +63,11 @@ bazel_dep(
 internal_deps = use_extension("//rust/private:extensions.bzl", "i")
 use_repo(
     internal_deps,
-    "bazelci_rules",
     "cargo_bazel.buildifier-darwin-amd64",
     "cargo_bazel.buildifier-darwin-arm64",
     "cargo_bazel.buildifier-linux-amd64",
     "cargo_bazel.buildifier-linux-arm64",
     "cargo_bazel.buildifier-windows-amd64.exe",
-    "com_google_googleapis",
     "cui",
     "cui__anyhow-1.0.75",
     "cui__camino-1.1.6",
@@ -80,6 +83,7 @@ use_repo(
     "cui__itertools-0.12.0",
     "cui__maplit-1.0.2",
     "cui__normpath-1.1.1",
+    "cui__once_cell-1.19.0",
     "cui__pathdiff-0.2.1",
     "cui__regex-1.10.2",
     "cui__semver-1.0.20",
@@ -146,9 +150,9 @@ use_repo(
     "rules_rust_wasm_bindgen__tempfile-3.6.0",
     "rules_rust_wasm_bindgen__ureq-2.8.0",
     "rules_rust_wasm_bindgen__walrus-0.20.3",
-    "rules_rust_wasm_bindgen__wasm-bindgen-0.2.91",
-    "rules_rust_wasm_bindgen__wasm-bindgen-cli-support-0.2.91",
-    "rules_rust_wasm_bindgen__wasm-bindgen-shared-0.2.91",
+    "rules_rust_wasm_bindgen__wasm-bindgen-0.2.92",
+    "rules_rust_wasm_bindgen__wasm-bindgen-cli-support-0.2.92",
+    "rules_rust_wasm_bindgen__wasm-bindgen-shared-0.2.92",
     "rules_rust_wasm_bindgen__wasmparser-0.102.0",
     "rules_rust_wasm_bindgen__wasmprinter-0.2.60",
     "rules_rust_wasm_bindgen_cli",

@@ -14,7 +14,7 @@ rust_library(
     name = "gix_tempfile",
     srcs = glob(
         include = ["**/*.rs"],
-        allow_empty = False,
+        allow_empty = True,
     ),
     compile_data = glob(
         include = ["**"],
@@ -80,7 +80,7 @@ rust_library(
     version = "10.0.0",
     deps = [
         "@cui__gix-fs-0.7.0//:gix_fs",
-        "@cui__once_cell-1.18.0//:once_cell",
+        "@cui__once_cell-1.19.0//:once_cell",
         "@cui__parking_lot-0.12.1//:parking_lot",
         "@cui__tempfile-3.8.1//:tempfile",
     ] + select({

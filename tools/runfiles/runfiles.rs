@@ -44,7 +44,7 @@ const TEST_SRCDIR_ENV_VAR: &str = "TEST_SRCDIR";
 
 #[macro_export]
 macro_rules! rlocation {
-    ($r:ident, $path:expr) => {
+    ($r:expr, $path:expr) => {
         $r.rlocation_from($path, env!("REPOSITORY_NAME"))
     };
 }
@@ -66,7 +66,7 @@ pub struct Runfiles {
 
 impl Runfiles {
     /// Creates a manifest based Runfiles object when
-    /// RUNFILES_MANIFEST_ONLY environment variable is present,
+    /// RUNFILES_MANIFEST_FILE environment variable is present,
     /// or a directory based Runfiles object otherwise.
     pub fn create() -> io::Result<Self> {
         let mode = if let Some(manifest_file) = std::env::var_os(MANIFEST_FILE_ENV_VAR) {
@@ -125,21 +125,22 @@ impl Runfiles {
             return path.to_path_buf();
         }
 
-        let parts: Vec<&str> = path
-            .to_str()
-            .expect("Should be valid UTF8")
-            .splitn(2, '/')
-            .collect();
-        if parts.len() == 2 {
-            let key: (String, String) = (source_repo.into(), parts[0].into());
-            if let Some(target_repo_directory) = self.repo_mapping.get(&key) {
-                return raw_rlocation(
-                    &self.mode,
-                    target_repo_directory.to_owned() + "/" + parts[1],
-                );
-            };
+        let path_str = path.to_str().expect("Should be valid UTF8");
+        let (repo_alias, repo_path): (&str, Option<&str>) = match path_str.split_once('/') {
+            Some((name, alias)) => (name, Some(alias)),
+            None => (path_str, None),
+        };
+        let key: (String, String) = (source_repo.into(), repo_alias.into());
+        if let Some(target_repo_directory) = self.repo_mapping.get(&key) {
+            match repo_path {
+                Some(repo_path) => {
+                    raw_rlocation(&self.mode, format!("{target_repo_directory}/{repo_path}"))
+                }
+                None => raw_rlocation(&self.mode, target_repo_directory),
+            }
+        } else {
+            raw_rlocation(&self.mode, path)
         }
-        raw_rlocation(&self.mode, path)
     }
 }
 
@@ -259,8 +260,11 @@ mod test {
             env::remove_var(MANIFEST_FILE_ENV_VAR);
             let r = Runfiles::create().unwrap();
 
-            let mut f =
-                File::open(r.rlocation("rules_rust/tools/runfiles/data/sample.txt")).unwrap();
+            let d = rlocation!(r, "rules_rust");
+            let f = rlocation!(r, "rules_rust/tools/runfiles/data/sample.txt");
+            assert_eq!(d.join("tools/runfiles/data/sample.txt"), f);
+
+            let mut f = File::open(f).unwrap();
 
             let mut buffer = String::new();
             f.read_to_string(&mut buffer).unwrap();
@@ -276,7 +280,7 @@ mod test {
             let r = Runfiles::create().unwrap();
 
             let mut f =
-                File::open(r.rlocation("rules_rust/tools/runfiles/data/sample.txt")).unwrap();
+                File::open(rlocation!(r, "rules_rust/tools/runfiles/data/sample.txt")).unwrap();
 
             let mut buffer = String::new();
             f.read_to_string(&mut buffer).unwrap();
@@ -295,7 +299,7 @@ mod test {
             let r = Runfiles::create().unwrap();
 
             let mut f =
-                File::open(r.rlocation("rules_rust/tools/runfiles/data/sample.txt")).unwrap();
+                File::open(rlocation!(r, "rules_rust/tools/runfiles/data/sample.txt")).unwrap();
 
             let mut buffer = String::new();
             f.read_to_string(&mut buffer).unwrap();

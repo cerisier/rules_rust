@@ -2,8 +2,8 @@
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
-load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "CPP_COMPILE_ACTION_NAME", "C_COMPILE_ACTION_NAME")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@rules_cc//cc:action_names.bzl", "ACTION_NAMES")
 load("//rust:defs.bzl", "rust_common")
 load("//rust:rust_common.bzl", "BuildInfo", "DepInfo")
 
@@ -46,17 +46,17 @@ def get_cc_compile_args_and_env(cc_toolchain, feature_configuration):
     )
     cc_c_args = cc_common.get_memory_inefficient_command_line(
         feature_configuration = feature_configuration,
-        action_name = C_COMPILE_ACTION_NAME,
+        action_name = ACTION_NAMES.c_compile,
         variables = compile_variables,
     )
     cc_cxx_args = cc_common.get_memory_inefficient_command_line(
         feature_configuration = feature_configuration,
-        action_name = CPP_COMPILE_ACTION_NAME,
+        action_name = ACTION_NAMES.cpp_compile,
         variables = compile_variables,
     )
     cc_env = cc_common.get_environment_variables(
         feature_configuration = feature_configuration,
-        action_name = C_COMPILE_ACTION_NAME,
+        action_name = ACTION_NAMES.c_compile,
         variables = compile_variables,
     )
     return cc_c_args, cc_cxx_args, cc_env
@@ -151,7 +151,9 @@ def _cargo_build_script_impl(ctx):
         stderr = ctx.actions.declare_file(ctx.label.name + ".stderr.log"),
     )
 
-    pkg_name = name_to_pkg_name(ctx.label.name)
+    pkg_name = ctx.attr.pkg_name
+    if pkg_name == "":
+        pkg_name = name_to_pkg_name(ctx.label.name)
 
     toolchain_tools = [toolchain.all_files]
 
@@ -205,13 +207,18 @@ def _cargo_build_script_impl(ctx):
     if cc_toolchain:
         toolchain_tools.append(cc_toolchain.all_files)
 
-        cc_executable = cc_toolchain.compiler_executable
-        if cc_executable:
-            env["CC"] = cc_executable
-            env["CXX"] = cc_executable
-        ar_executable = cc_toolchain.ar_executable
-        if ar_executable:
-            env["AR"] = ar_executable
+        env["CC"] = cc_common.get_tool_for_action(
+            feature_configuration = feature_configuration,
+            action_name = ACTION_NAMES.c_compile,
+        )
+        env["CXX"] = cc_common.get_tool_for_action(
+            feature_configuration = feature_configuration,
+            action_name = ACTION_NAMES.cpp_compile,
+        )
+        env["AR"] = cc_common.get_tool_for_action(
+            feature_configuration = feature_configuration,
+            action_name = ACTION_NAMES.cpp_link_static_library,
+        )
 
         # Populate CFLAGS and CXXFLAGS that cc-rs relies on when building from source, in particular
         # to determine the deployment target when building for apple platforms (`macosx-version-min`
@@ -320,6 +327,10 @@ def _cargo_build_script_impl(ctx):
     )
 
     return [
+        # Although this isn't used anywhere, without this, `bazel build`'ing
+        # the cargo_build_script label won't actually run the build script
+        # since bazel is lazy.
+        DefaultInfo(files = depset([out_dir])),
         BuildInfo(
             out_dir = out_dir,
             rustc_env = env_out,
@@ -368,6 +379,9 @@ cargo_build_script = rule(
         "links": attr.string(
             doc = "The name of the native library this crate links against.",
         ),
+        "pkg_name": attr.string(
+            doc = "The name of package being compiled, if not derived from `name`.",
+        ),
         "rundir": attr.string(
             default = "",
             doc = dedent("""\
@@ -383,7 +397,7 @@ cargo_build_script = rule(
                 List of compiler flags passed to `rustc`.
 
                 These strings are subject to Make variable expansion for predefined
-                source/output path variables like `$location`, `$execpath`, and 
+                source/output path variables like `$location`, `$execpath`, and
                 `$rootpath`. This expansion is useful if you wish to pass a generated
                 file of arguments to rustc: `@$(location //package:target)`.
             """),

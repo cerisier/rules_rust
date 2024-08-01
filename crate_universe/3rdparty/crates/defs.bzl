@@ -307,6 +307,7 @@ _NORMAL_DEPENDENCIES = {
             "hex": Label("@cui__hex-0.4.3//:hex"),
             "itertools": Label("@cui__itertools-0.12.0//:itertools"),
             "normpath": Label("@cui__normpath-1.1.1//:normpath"),
+            "once_cell": Label("@cui__once_cell-1.19.0//:once_cell"),
             "pathdiff": Label("@cui__pathdiff-0.2.1//:pathdiff"),
             "regex": Label("@cui__regex-1.10.2//:regex"),
             "semver": Label("@cui__semver-1.0.20//:semver"),
@@ -2059,6 +2060,16 @@ def crate_repositories():
 
     maybe(
         http_archive,
+        name = "cui__num-conv-0.1.0",
+        sha256 = "51d515d32fb182ee37cda2ccdcb92950d6a3c2893aa280e540671c2cd0f3b1d9",
+        type = "tar.gz",
+        urls = ["https://static.crates.io/crates/num-conv/0.1.0/download"],
+        strip_prefix = "num-conv-0.1.0",
+        build_file = Label("@rules_rust//crate_universe/3rdparty/crates:BUILD.num-conv-0.1.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
         name = "cui__num-integer-0.1.45",
         sha256 = "225d3389fb3509a24c93f5c29eb6bde2586b98d9f016636dff58d7c6f7569cd9",
         type = "tar.gz",
@@ -2109,12 +2120,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "cui__once_cell-1.18.0",
-        sha256 = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d",
+        name = "cui__once_cell-1.19.0",
+        sha256 = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92",
         type = "tar.gz",
-        urls = ["https://static.crates.io/crates/once_cell/1.18.0/download"],
-        strip_prefix = "once_cell-1.18.0",
-        build_file = Label("@rules_rust//crate_universe/3rdparty/crates:BUILD.once_cell-1.18.0.bazel"),
+        urls = ["https://static.crates.io/crates/once_cell/1.19.0/download"],
+        strip_prefix = "once_cell-1.19.0",
+        build_file = Label("@rules_rust//crate_universe/3rdparty/crates:BUILD.once_cell-1.19.0.bazel"),
     )
 
     maybe(
@@ -2789,12 +2800,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "cui__time-0.3.30",
-        sha256 = "c4a34ab300f2dee6e562c10a046fc05e358b29f9bf92277f30c3c8d82275f6f5",
+        name = "cui__time-0.3.36",
+        sha256 = "5dfd88e563464686c916c7e46e623e520ddc6d79fa6641390f2e3fa86e83e885",
         type = "tar.gz",
-        urls = ["https://static.crates.io/crates/time/0.3.30/download"],
-        strip_prefix = "time-0.3.30",
-        build_file = Label("@rules_rust//crate_universe/3rdparty/crates:BUILD.time-0.3.30.bazel"),
+        urls = ["https://static.crates.io/crates/time/0.3.36/download"],
+        strip_prefix = "time-0.3.36",
+        build_file = Label("@rules_rust//crate_universe/3rdparty/crates:BUILD.time-0.3.36.bazel"),
     )
 
     maybe(
@@ -2809,12 +2820,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "cui__time-macros-0.2.15",
-        sha256 = "4ad70d68dba9e1f8aceda7aa6711965dfec1cac869f311a51bd08b3a2ccbce20",
+        name = "cui__time-macros-0.2.18",
+        sha256 = "3f252a68540fde3a3877aeea552b832b40ab9a69e318efd078774a01ddee1ccf",
         type = "tar.gz",
-        urls = ["https://static.crates.io/crates/time-macros/0.2.15/download"],
-        strip_prefix = "time-macros-0.2.15",
-        build_file = Label("@rules_rust//crate_universe/3rdparty/crates:BUILD.time-macros-0.2.15.bazel"),
+        urls = ["https://static.crates.io/crates/time-macros/0.2.18/download"],
+        strip_prefix = "time-macros-0.2.18",
+        build_file = Label("@rules_rust//crate_universe/3rdparty/crates:BUILD.time-macros-0.2.18.bazel"),
     )
 
     maybe(
@@ -3361,6 +3372,7 @@ def crate_repositories():
         struct(repo = "cui__indoc-2.0.4", is_dev_dep = False),
         struct(repo = "cui__itertools-0.12.0", is_dev_dep = False),
         struct(repo = "cui__normpath-1.1.1", is_dev_dep = False),
+        struct(repo = "cui__once_cell-1.19.0", is_dev_dep = False),
         struct(repo = "cui__pathdiff-0.2.1", is_dev_dep = False),
         struct(repo = "cui__regex-1.10.2", is_dev_dep = False),
         struct(repo = "cui__semver-1.0.20", is_dev_dep = False),

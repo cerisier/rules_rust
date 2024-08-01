@@ -126,26 +126,25 @@ pub fn vendor(opt: VendorOptions) -> Result<()> {
     let splicer = Splicer::new(PathBuf::from(temp_dir.as_ref()), splicing_manifest)
         .context("Failed to create splicer")?;
 
+    let cargo = Cargo::new(opt.cargo, opt.rustc.clone());
+
     // Splice together the manifest
     let manifest_path = splicer
-        .splice_workspace(&opt.cargo)
+        .splice_workspace(&cargo)
         .context("Failed to splice workspace")?;
-
-    let cargo = Cargo::new(opt.cargo);
 
     // Gather a cargo lockfile
     let cargo_lockfile = generate_lockfile(
         &manifest_path,
         &opt.cargo_lockfile,
         cargo.clone(),
-        &opt.rustc,
         &opt.repin,
     )?;
 
     // Load the config from disk
     let config = Config::try_from_path(&opt.config)?;
 
-    let resolver_data = TreeResolver::new(cargo.clone(), opt.rustc.clone()).generate(
+    let resolver_data = TreeResolver::new(cargo.clone()).generate(
         manifest_path.as_path_buf(),
         &config.supported_platform_triples,
     )?;
@@ -169,7 +168,7 @@ pub fn vendor(opt: VendorOptions) -> Result<()> {
     let annotations = Annotations::new(cargo_metadata, cargo_lockfile.clone(), config.clone())?;
 
     // Generate renderable contexts for earch package
-    let context = Context::new(annotations)?;
+    let context = Context::new(annotations, config.rendering.are_sources_present())?;
 
     // Render build files
     let outputs = Renderer::new(
